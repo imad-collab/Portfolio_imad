@@ -1537,26 +1537,15 @@
             
             if (message === '') return;
             
-            // Validate email if chat hasn't started
-            if (!localStorage.getItem('chatStarted')) {
-                if (!name || !email) {
-                    alert('Please enter your name and email before sending a message.');
-                    return;
-                }
-                
-                if (!isValidEmail(email)) {
-                    alert('Please enter a valid email address.');
-                    return;
-                }
-                
-                // Save user info
-                localStorage.setItem('chatName', name);
-                localStorage.setItem('chatEmail', email);
-                localStorage.setItem('chatStarted', 'true');
-                
-                // Hide name/email fields after first message
-                document.getElementById('nameEmailGroup').style.display = 'none';
-                document.getElementById('quickReplies').style.display = 'none';
+            // Always validate name and email for EVERY message
+            if (!name || !email) {
+                alert('Please enter your name and email before sending a message.');
+                return;
+            }
+            
+            if (!isValidEmail(email)) {
+                alert('Please enter a valid email address.');
+                return;
             }
             
             // Add user message to chat
@@ -1716,38 +1705,9 @@
                 }, 3000);
             }
             
-            // Check if user has provided email - if not, show the fields
-            const savedEmail = localStorage.getItem('chatEmail');
-            const chatStarted = localStorage.getItem('chatStarted');
-            
-            if (chatStarted && savedEmail) {
-                // User has already provided email - hide fields
-                document.getElementById('nameEmailGroup').style.display = 'none';
-                document.getElementById('quickReplies').style.display = 'none';
-                
-                const savedName = localStorage.getItem('chatName');
-                if (savedName) {
-                    // Add a welcome back message
-                    setTimeout(() => {
-                        const welcomeDiv = document.createElement('div');
-                        welcomeDiv.className = 'chat-message';
-                        welcomeDiv.innerHTML = `
-                            <img src="profile.jpg" alt="Mohammed" class="message-avatar">
-                            <div class="message-content">
-                                <div class="message-bubble">
-                                    Welcome back, ${savedName}! 👋 Feel free to send me another message.
-                                </div>
-                                <div class="message-time">${getCurrentTime()}</div>
-                            </div>
-                        `;
-                        document.getElementById('chatMessages').appendChild(welcomeDiv);
-                    }, 500);
-                }
-            } else {
-                // Show fields - user needs to provide email
-                document.getElementById('nameEmailGroup').style.display = 'block';
-                document.getElementById('quickReplies').style.display = 'flex';
-            }
+            // Always show name/email fields for every message
+            document.getElementById('nameEmailGroup').style.display = 'flex';
+            document.getElementById('quickReplies').style.display = 'flex';
         });
     </script>
 
