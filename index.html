@@ -682,6 +682,23 @@
             font-size: 0.8rem;
             margin: 0;
             opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            display: inline-block;
+            animation: pulse-status 2s infinite;
+        }
+        
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         .chat-close {
@@ -754,6 +771,21 @@
             padding: 15px;
             background: var(--card-bg);
             border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .chat-form-group {
+            margin-bottom: 10px;
+        }
+        
+        .chat-form-group label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            display: block;
+            font-weight: 600;
+        }
+        
+        .chat-input-row {
             display: flex;
             gap: 10px;
         }
@@ -768,10 +800,41 @@
             background: var(--bg-color);
             color: var(--text-dark);
             transition: border-color 0.3s ease;
+            font-family: 'Lato', sans-serif;
         }
         
         .chat-input:focus {
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .chat-input-small {
+            padding: 10px 15px;
+            border-radius: 20px;
+        }
+        
+        .quick-replies {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-reply-btn {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-reply-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
         }
         
         .chat-send-btn {
@@ -1254,7 +1317,7 @@
                 <img src="profile.jpg" alt="Mohammed Imaduddin" class="chat-avatar">
                 <div class="chat-header-text">
                     <h3>Mohammed Imaduddin</h3>
-                    <p>💼 Data Science & AI</p>
+                    <p><span class="status-indicator"></span> Online & Ready to Connect</p>
                 </div>
             </div>
             <button class="chat-close" onclick="toggleChat()">
@@ -1275,10 +1338,29 @@
         </div>
         
         <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-            <button class="chat-send-btn" onclick="sendMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+            <div class="quick-replies" id="quickReplies">
+                <button class="quick-reply-btn" onclick="setQuickReply('I would like to schedule an interview')">📅 Schedule Interview</button>
+                <button class="quick-reply-btn" onclick="setQuickReply('Tell me about your projects')">💻 Ask About Projects</button>
+                <button class="quick-reply-btn" onclick="setQuickReply('I have a job opportunity')">💼 Job Opportunity</button>
+            </div>
+            <div class="chat-form-group" id="nameEmailGroup">
+                <div class="chat-input-row">
+                    <div style="flex: 1;">
+                        <label for="chatName">Your Name</label>
+                        <input type="text" class="chat-input chat-input-small" id="chatName" placeholder="Enter your name">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="chatEmail">Your Email</label>
+                        <input type="email" class="chat-input chat-input-small" id="chatEmail" placeholder="your@email.com">
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1444,9 +1526,35 @@
         
         function sendMessage() {
             const input = document.getElementById('chatInput');
+            const nameInput = document.getElementById('chatName');
+            const emailInput = document.getElementById('chatEmail');
             const message = input.value.trim();
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
             
             if (message === '') return;
+            
+            // Validate email if chat hasn't started
+            if (!localStorage.getItem('chatStarted')) {
+                if (!name || !email) {
+                    alert('Please enter your name and email before sending a message.');
+                    return;
+                }
+                
+                if (!isValidEmail(email)) {
+                    alert('Please enter a valid email address.');
+                    return;
+                }
+                
+                // Save user info
+                localStorage.setItem('chatName', name);
+                localStorage.setItem('chatEmail', email);
+                localStorage.setItem('chatStarted', 'true');
+                
+                // Hide name/email fields after first message
+                document.getElementById('nameEmailGroup').style.display = 'none';
+                document.getElementById('quickReplies').style.display = 'none';
+            }
             
             // Add user message to chat
             addMessage(message, 'user');
@@ -1456,19 +1564,29 @@
             saveMessage(message, 'user');
             
             // Send email notification to you
-            sendEmailNotification(message);
+            sendEmailNotification(message, name, email);
             
             // Show a simple confirmation message
             setTimeout(() => {
                 const confirmDiv = document.createElement('div');
                 confirmDiv.style.cssText = 'text-align: center; padding: 10px; color: var(--text-light); font-size: 0.85rem; font-style: italic;';
-                confirmDiv.textContent = '✓ Message sent! Mohammed will respond via email.';
+                confirmDiv.innerHTML = `✓ Message sent! I'll respond to <strong>${email}</strong> soon.`;
                 document.getElementById('chatMessages').appendChild(confirmDiv);
                 document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
                 
-                // Remove confirmation after 3 seconds
-                setTimeout(() => confirmDiv.remove(), 3000);
+                // Remove confirmation after 4 seconds
+                setTimeout(() => confirmDiv.remove(), 4000);
             }, 500);
+        }
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        function setQuickReply(text) {
+            document.getElementById('chatInput').value = text;
+            document.getElementById('chatInput').focus();
         }
         
         function addMessage(text, sender) {
@@ -1548,13 +1666,15 @@
             localStorage.setItem('chatMessages', JSON.stringify(messages));
         }
         
-        function sendEmailNotification(message) {
+        function sendEmailNotification(message, name, email) {
             // This uses a free email service (FormSubmit) to send you notifications
-            // You can replace this with your own backend solution
             const formData = new FormData();
+            formData.append('name', name || 'Anonymous');
+            formData.append('email', email || 'No email provided');
             formData.append('message', message);
             formData.append('time', new Date().toLocaleString());
-            formData.append('_subject', 'New Portfolio Chat Message');
+            formData.append('_subject', `💬 New Portfolio Message from ${name || 'Visitor'}`);
+            formData.append('_template', 'table');
             formData.append('_captcha', 'false');
             
             fetch('https://formsubmit.co/imad0414@gmail.com', {
@@ -1562,7 +1682,7 @@
                 body: formData,
                 mode: 'no-cors'
             }).then(() => {
-                console.log('Notification sent');
+                console.log('Notification sent to Mohammed');
             }).catch(err => {
                 console.log('Notification error:', err);
             });
@@ -1575,6 +1695,32 @@
                 setTimeout(() => {
                     document.getElementById('chatNotification').classList.add('show');
                 }, 3000);
+            }
+            
+            // Restore chat state if user has already provided info
+            const chatStarted = localStorage.getItem('chatStarted');
+            if (chatStarted) {
+                document.getElementById('nameEmailGroup').style.display = 'none';
+                document.getElementById('quickReplies').style.display = 'none';
+                
+                const savedName = localStorage.getItem('chatName');
+                if (savedName) {
+                    // Add a welcome back message
+                    setTimeout(() => {
+                        const welcomeDiv = document.createElement('div');
+                        welcomeDiv.className = 'chat-message';
+                        welcomeDiv.innerHTML = `
+                            <img src="profile.jpg" alt="Mohammed" class="message-avatar">
+                            <div class="message-content">
+                                <div class="message-bubble">
+                                    Welcome back, ${savedName}! 👋 Feel free to send me another message.
+                                </div>
+                                <div class="message-time">${getCurrentTime()}</div>
+                            </div>
+                        `;
+                        document.getElementById('chatMessages').appendChild(welcomeDiv);
+                    }, 500);
+                }
             }
         });
     </script>
