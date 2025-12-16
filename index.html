@@ -1716,9 +1716,12 @@
                 }, 3000);
             }
             
-            // Restore chat state if user has already provided info
+            // Check if user has provided email - if not, show the fields
+            const savedEmail = localStorage.getItem('chatEmail');
             const chatStarted = localStorage.getItem('chatStarted');
-            if (chatStarted) {
+            
+            if (chatStarted && savedEmail) {
+                // User has already provided email - hide fields
                 document.getElementById('nameEmailGroup').style.display = 'none';
                 document.getElementById('quickReplies').style.display = 'none';
                 
@@ -1740,6 +1743,10 @@
                         document.getElementById('chatMessages').appendChild(welcomeDiv);
                     }, 500);
                 }
+            } else {
+                // Show fields - user needs to provide email
+                document.getElementById('nameEmailGroup').style.display = 'block';
+                document.getElementById('quickReplies').style.display = 'flex';
             }
         });
     </script>
