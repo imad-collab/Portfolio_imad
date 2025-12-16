@@ -801,6 +801,9 @@
             color: var(--text-dark);
             transition: border-color 0.3s ease;
             font-family: 'Lato', sans-serif;
+            resize: none;
+            max-height: 120px;
+            overflow-y: auto;
         }
         
         .chat-input:focus {
@@ -1356,7 +1359,7 @@
                 </div>
             </div>
             <div class="chat-input-row">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                <textarea class="chat-input" id="chatInput" placeholder="Type your message... (Shift+Enter for new line)" onkeypress="handleKeyPress(event)" rows="1"></textarea>
                 <button class="chat-send-btn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -1645,9 +1648,11 @@
         }
         
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendMessage();
             }
+            // If Shift+Enter, allow default behavior (new line)
         }
         
         function escapeHtml(text) {
@@ -1667,21 +1672,31 @@
         }
         
         function sendEmailNotification(message, name, email) {
-            // This uses a free email service (FormSubmit) to send you notifications
-            const formData = new FormData();
-            formData.append('name', name || 'Anonymous');
-            formData.append('email', email || 'No email provided');
-            formData.append('message', message);
-            formData.append('time', new Date().toLocaleString());
-            formData.append('_subject', `💬 New Portfolio Message from ${name || 'Visitor'}`);
-            formData.append('_replyto', email); // This allows you to reply directly from your email
-            formData.append('_template', 'table');
-            formData.append('_captcha', 'false');
-            formData.append('_cc', ''); // Add CC if needed
+            // Using Web3Forms - More reliable, no verification needed
+            const formData = {
+                access_key: "YOUR_WEB3FORMS_KEY", // We'll get this in a moment
+                name: name || 'Anonymous',
+                email: email || 'No email provided',
+                message: message,
+                subject: `💬 New Portfolio Message from ${name || 'Visitor'}`,
+                from_name: name || 'Portfolio Visitor',
+                time: new Date().toLocaleString()
+            };
+            
+            // Fallback to FormSubmit
+            const formDataFS = new FormData();
+            formDataFS.append('name', name || 'Anonymous');
+            formDataFS.append('email', email || 'No email provided');
+            formDataFS.append('message', message);
+            formDataFS.append('time', new Date().toLocaleString());
+            formDataFS.append('_subject', `💬 New Portfolio Message from ${name || 'Visitor'}`);
+            formDataFS.append('_replyto', email);
+            formDataFS.append('_template', 'table');
+            formDataFS.append('_captcha', 'false');
             
             fetch('https://formsubmit.co/imad0414@gmail.com', {
                 method: 'POST',
-                body: formData,
+                body: formDataFS,
                 mode: 'no-cors'
             }).then(() => {
                 console.log('✅ Email notification sent to Mohammed at imad0414@gmail.com');
