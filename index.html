@@ -1552,6 +1552,10 @@
             addMessage(message, 'user');
             input.value = '';
             
+            // Clear name and email fields after sending
+            nameInput.value = '';
+            emailInput.value = '';
+            
             // Save message to localStorage
             saveMessage(message, 'user');
             
