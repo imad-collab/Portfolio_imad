@@ -1674,17 +1674,21 @@
             formData.append('message', message);
             formData.append('time', new Date().toLocaleString());
             formData.append('_subject', `💬 New Portfolio Message from ${name || 'Visitor'}`);
+            formData.append('_replyto', email); // This allows you to reply directly from your email
             formData.append('_template', 'table');
             formData.append('_captcha', 'false');
+            formData.append('_cc', ''); // Add CC if needed
             
             fetch('https://formsubmit.co/imad0414@gmail.com', {
                 method: 'POST',
                 body: formData,
                 mode: 'no-cors'
             }).then(() => {
-                console.log('Notification sent to Mohammed');
+                console.log('✅ Email notification sent to Mohammed at imad0414@gmail.com');
+                console.log('📧 From:', name, '|', email);
+                console.log('💬 Message:', message);
             }).catch(err => {
-                console.log('Notification error:', err);
+                console.log('❌ Notification error:', err);
             });
         }
         
